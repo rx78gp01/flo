@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014-2018 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -32,6 +32,8 @@ static void sockev_skmsg_recv(struct sk_buff *skb)
 
 static void _sockev_event(unsigned long event, __u8 *evstr, int buflen)
 {
+	memset(evstr, 0, buflen);
+
 	switch (event) {
 	case SOCKEV_SOCKET:
 		strlcpy(evstr, "SOCKEV_SOCKET", buflen);
