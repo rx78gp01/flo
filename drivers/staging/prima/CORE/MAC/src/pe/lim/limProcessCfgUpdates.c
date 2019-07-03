@@ -18,26 +18,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/*
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
- *
- * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
- *
- *
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all
- * copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
- * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- */
 
 /*
  * Airgo Networks, Inc proprietary. All rights reserved.
@@ -741,9 +721,13 @@ limUpdateConfig(tpAniSirGlobal pMac,tpPESession psessionEntry)
         limLog(pMac, LOGP, FL("cfg get short preamble failed"));
     psessionEntry->beaconParams.fShortPreamble = (val) ? 1 : 0;
 
-    if (wlan_cfgGetInt(pMac, WNI_CFG_WME_ENABLED, &val) != eSIR_SUCCESS)
-        limLog(pMac, LOGP, FL("cfg get wme enabled failed"));
-    psessionEntry->limWmeEnabled = (val) ? 1 : 0;
+    /* In STA case this parameter is filled during the join request */
+    if (psessionEntry->limSystemRole == eLIM_AP_ROLE)
+    {
+        if (wlan_cfgGetInt(pMac, WNI_CFG_WME_ENABLED, &val) != eSIR_SUCCESS)
+            limLog(pMac, LOGP, FL("cfg get wme enabled failed"));
+        psessionEntry->limWmeEnabled = (val) ? 1 : 0;
+    }
 
     if (wlan_cfgGetInt(pMac, WNI_CFG_WSM_ENABLED, &val) != eSIR_SUCCESS)
         limLog(pMac, LOGP, FL("cfg get wsm enabled failed"));
@@ -754,11 +738,13 @@ limUpdateConfig(tpAniSirGlobal pMac,tpPESession psessionEntry)
         PELOGE(limLog(pMac, LOGE, FL("Can't enable WSM without WME"));)
         psessionEntry->limWsmEnabled = 0;
     }
-
-    if (wlan_cfgGetInt(pMac, WNI_CFG_QOS_ENABLED, &val) != eSIR_SUCCESS)
-        limLog(pMac, LOGP, FL("cfg get qos enabled failed"));
-    psessionEntry->limQosEnabled = (val) ? 1 : 0;
-
+    /* In STA , this parameter is filled during the join request */
+    if (psessionEntry->limSystemRole== eLIM_AP_ROLE)
+    {
+        if (wlan_cfgGetInt(pMac, WNI_CFG_QOS_ENABLED, &val) != eSIR_SUCCESS)
+            limLog(pMac, LOGP, FL("cfg get qos enabled failed"));
+        psessionEntry->limQosEnabled = (val) ? 1 : 0;
+    }
     if (wlan_cfgGetInt(pMac, WNI_CFG_HCF_ENABLED, &val) != eSIR_SUCCESS)
         limLog(pMac, LOGP, FL("cfg get hcf enabled failed"));
     psessionEntry->limHcfEnabled = (val) ? 1 : 0;

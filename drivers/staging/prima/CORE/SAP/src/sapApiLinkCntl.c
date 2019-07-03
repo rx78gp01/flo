@@ -18,26 +18,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/*
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
- *
- * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
- *
- *
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all
- * copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
- * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- */
 
 /*===========================================================================
 
@@ -158,9 +138,6 @@ WLANSAP_ScanCallback
     tWLAN_SAPEvent sapEvent; /* State machine event */
     v_U8_t operChannel = 0;
     VOS_STATUS sapstatus;
-#ifdef SOFTAP_CHANNEL_RANGE
-    v_U32_t operatingBand;
-#endif
 
     /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -211,13 +188,8 @@ WLANSAP_ScanCallback
        {
          /* if the channel list is empty then there is no valid channel in 
                 the selected sub-band so select default channel in the 
-                BAND(2.4GHz/5GHZ) */
-          ccmCfgGetInt( halHandle, WNI_CFG_SAP_CHANNEL_SELECT_OPERATING_BAND, &operatingBand);
-          if(RF_SUBBAND_2_4_GHZ == operatingBand )
+                BAND(2.4GHz) as 2.4 channels are available in all the countries*/
               psapContext->channel = SAP_DEFAULT_CHANNEL;
-          else
-              psapContext->channel = SAP_DEFAULT_5GHZ_CHANNEL;
-         
        }
     }
 #else

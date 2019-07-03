@@ -18,26 +18,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/*
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
- *
- * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
- *
- *
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all
- * copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
- * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- */
 
 /*============================================================================
 limLogDump.c
@@ -1751,19 +1731,6 @@ dump_sch_beacon_trigger( tpAniSirGlobal pMac, tANI_U32 arg1, tANI_U32 arg2, tANI
     return p;
 }
 
-
-static char* dump_lim_trace_cfg(tpAniSirGlobal pMac, tANI_U32 arg1, tANI_U32 arg2, tANI_U32 arg3, tANI_U32 arg4, char *p)
-{
-    MTRACE(macTraceCfg(pMac, arg1, arg2, arg3, arg4);)
-    return p;
-}
-
-static char* dump_lim_trace_dump(tpAniSirGlobal pMac, tANI_U32 arg1, tANI_U32 arg2, tANI_U32 arg3, tANI_U32 arg4, char *p)
-{
-    MTRACE(macTraceDumpAll(pMac, (tANI_U8)arg1, (tANI_U8)arg2, arg3);)
-    return p;
-}
-
 static char* dump_lim_set_scan_in_powersave( tpAniSirGlobal pMac, tANI_U32 arg1, tANI_U32 arg2, tANI_U32 arg3, tANI_U32 arg4, char *p)
 {
     p += log_sprintf( pMac,p, "logDump set scan in powersave to %d \n", arg1);
@@ -2410,8 +2377,6 @@ static tDumpFuncEntry limMenuDumpTable[] = {
      * be moved to logDump.c
      */
     {321,   "PE:LIM: Set Log Level <VOS Module> <VOS Log Level>",    dump_lim_update_log_level},
-    {322,   "PE.LIM: Enable/Disable PE Tracing",                     dump_lim_trace_cfg},
-    {323,   "PE.LIM: Trace Dump if enabled",                           dump_lim_trace_dump},
     {331,   "PE.LIM: Send finish scan to LIM",                       dump_lim_finishscan_send},
     {332,   "PE.LIM: force probe rsp send from LIM",                 dump_lim_prb_rsp_send},
     {333,   "PE.SCH: Trigger to generate a beacon",                  dump_sch_beacon_trigger},

@@ -18,26 +18,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/*
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
- *
- * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
- *
- *
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all
- * copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
- * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
- * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
- * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
- * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- */
 /**
  * \file limSendManagementFrames.c
  *
@@ -595,7 +575,7 @@ limSendProbeRspMgmtFrame(tpAniSirGlobal pMac,
 #ifdef WLAN_FEATURE_11AC
     if(psessionEntry->vhtCapability)
     {
-        limLog( pMac, LOGW, FL("Populate VHT IE in Probe Response"));
+        limLog( pMac, LOG1, FL("Populate VHT IE in Probe Response"));
         PopulateDot11fVHTCaps( pMac, &pFrm->VHTCaps );
         PopulateDot11fVHTOperation( pMac, &pFrm->VHTOperation );
         // we do not support multi users yet
@@ -868,7 +848,18 @@ limSendProbeRspMgmtFrame(tpAniSirGlobal pMac,
                             &noaIe[0], total_noaLen) != eHAL_STATUS_SUCCESS)
         {
             limLog(pMac, LOGE,
-                  FL("Not able to insert NoA because of length constraint"));
+                  FL("Not able to insert NoA because of length constraint."
+                                        "Total Length is :%d"),total_noaLen);
+            vos_mem_free(addIE);
+            vos_mem_free(pFrm);
+            palPktFree( pMac->hHdd, HAL_TXRX_FRM_802_11_MGMT,
+                       ( void* ) pFrame, ( void* ) pPacket );
+            return;
+        }
+        else
+        {
+            vos_mem_copy( &pFrame[nBytes - (total_noaLen)],
+                            &noaIe[0], total_noaLen);
         }
     }
 
@@ -1281,7 +1272,7 @@ limSendAssocRspMgmtFrame(tpAniSirGlobal pMac,
         if( pSta->mlmStaContext.vhtCapability && 
             psessionEntry->vhtCapability )
         {
-            limLog( pMac, LOGW, FL("Populate VHT IEs in Assoc Response"));
+            limLog( pMac, LOG1, FL("Populate VHT IEs in Assoc Response"));
             PopulateDot11fVHTCaps( pMac, &frm.VHTCaps );
             PopulateDot11fVHTOperation( pMac, &frm.VHTOperation);
             PopulateDot11fExtCap( pMac, &frm.ExtCap);
@@ -2279,6 +2270,9 @@ limSendAssocReqMgmtFrame(tpAniSirGlobal   pMac,
         txFlag |= HAL_USE_PEER_STA_REQUESTED_MASK;
     }
 
+    // enable caching
+    WLANTL_EnableCaching(psessionEntry->staId);
+
     halstatus = halTxFrame( pMac, pPacket, ( tANI_U16 ) (sizeof(tSirMacMgmtHdr) + nPayload),
             HAL_TXRX_FRM_802_11_MGMT,
             ANI_TXDIR_TODS,
@@ -2295,6 +2289,7 @@ limSendAssocReqMgmtFrame(tpAniSirGlobal   pMac,
 
     // Free up buffer allocated for mlmAssocReq
     palFreeMemory( pMac->hHdd, ( tANI_U8* ) pMlmAssocReq );
+    pMlmAssocReq = NULL;
     palFreeMemory(pMac->hHdd, pFrm);
     return;
 } // End limSendAssocReqMgmtFrame
@@ -2547,6 +2542,16 @@ limSendReassocReqWithFTIEsMgmtFrame(tpAniSirGlobal     pMac,
     }
 #endif
 
+#ifdef WLAN_FEATURE_11AC
+    if ( psessionEntry->vhtCapability &&
+             psessionEntry->vhtCapabilityPresentInBeacon)
+    {
+        limLog( pMac, LOG1, FL("Populate VHT IEs in Re-Assoc Request"));
+        PopulateDot11fVHTCaps( pMac, &frm.VHTCaps );
+        PopulateDot11fExtCap( pMac, &frm.ExtCap);
+    }
+#endif
+
     nStatus = dot11fGetPackedReAssocRequestSize( pMac, &frm, &nPayload );
     if ( DOT11F_FAILED( nStatus ) )
     {
@@ -2706,6 +2711,9 @@ limSendReassocReqWithFTIEsMgmtFrame(tpAniSirGlobal     pMac,
        psessionEntry->assocReqLen = (ft_ies_length);
     }
 
+
+    // Enable TL cahching in case of roaming
+    WLANTL_EnableCaching(psessionEntry->staId);
 
     halstatus = halTxFrame( pMac, pPacket, ( tANI_U16 ) (nBytes + ft_ies_length),
             HAL_TXRX_FRM_802_11_MGMT,
@@ -2953,7 +2961,7 @@ limSendReassocReqMgmtFrame(tpAniSirGlobal     pMac,
     if ( psessionEntry->vhtCapability &&
              psessionEntry->vhtCapabilityPresentInBeacon)
     {
-        limLog( pMac, LOGW, FL("Populate VHT IEs in Re-Assoc Request"));
+        limLog( pMac, LOG1, FL("Populate VHT IEs in Re-Assoc Request"));
         PopulateDot11fVHTCaps( pMac, &frm.VHTCaps );
         PopulateDot11fExtCap( pMac, &frm.ExtCap);
     }
@@ -3066,6 +3074,9 @@ limSendReassocReqMgmtFrame(tpAniSirGlobal     pMac,
     {
         txFlag |= HAL_USE_PEER_STA_REQUESTED_MASK;
     }
+
+    // enable caching
+    WLANTL_EnableCaching(psessionEntry->staId);
 
     halstatus = halTxFrame( pMac, pPacket, ( tANI_U16 ) (sizeof(tSirMacMgmtHdr) + nPayload),
                             HAL_TXRX_FRM_802_11_MGMT,
@@ -4802,14 +4813,9 @@ tSirRetStatus limSendAddBAReq( tpAniSirGlobal pMac,
     // 0 - indicates no BA timeout
     frmAddBAReq.BATimeout.timeout = pMlmAddBAReq->baTimeout;
 
-  // BA Starting Sequence Number
-  // Fragment number will always be zero
-  if (pMlmAddBAReq->baSSN < LIM_TX_FRAMES_THRESHOLD_ON_CHIP) {
-      pMlmAddBAReq->baSSN = LIM_TX_FRAMES_THRESHOLD_ON_CHIP;
-  }
-  
-  frmAddBAReq.BAStartingSequenceControl.ssn = 
-                pMlmAddBAReq->baSSN - LIM_TX_FRAMES_THRESHOLD_ON_CHIP;
+    /* Send SSN whatever we get from FW.
+     */
+    frmAddBAReq.BAStartingSequenceControl.ssn = pMlmAddBAReq->baSSN;
 
     nStatus = dot11fGetPackedAddBAReqSize( pMac, &frmAddBAReq, &nPayload );
 
@@ -4911,6 +4917,10 @@ tSirRetStatus limSendAddBAReq( tpAniSirGlobal pMac,
       FL( "Sending an ADDBA REQ to " ));
     limPrintMacAddr( pMac, pMlmAddBAReq->peerMacAddr, LOGW );
 
+    limLog( pMac, LOG1, FL( "ssn = %d fragNum = %d" ),
+                          frmAddBAReq.BAStartingSequenceControl.ssn,
+                          frmAddBAReq.BAStartingSequenceControl.fragNumber);
+
     if( ( SIR_BAND_5_GHZ == limGetRFBand(psessionEntry->currentOperChannel))
        || ( psessionEntry->pePersona == VOS_P2P_CLIENT_MODE ) ||
          ( psessionEntry->pePersona == VOS_P2P_GO_MODE)
@@ -5003,7 +5013,16 @@ tSirRetStatus limSendAddBARsp( tpAniSirGlobal pMac,
       frmAddBARsp.AddBAParameterSet.tid = pMlmAddBARsp->baTID;
       frmAddBARsp.AddBAParameterSet.policy = pMlmAddBARsp->baPolicy;
       frmAddBARsp.AddBAParameterSet.bufferSize = pMlmAddBARsp->baBufferSize;
-      frmAddBARsp.AddBAParameterSet.amsduSupported = psessionEntry->amsduSupportedInBA;
+
+      if(psessionEntry->isAmsduSupportInAMPDU)
+      {
+         frmAddBARsp.AddBAParameterSet.amsduSupported =
+                                          psessionEntry->amsduSupportedInBA;
+      }
+      else
+      {
+         frmAddBARsp.AddBAParameterSet.amsduSupported = 0;
+      }
 
       // BA timeout
       // 0 - indicates no BA timeout
@@ -5300,9 +5319,14 @@ tSirRetStatus limSendDelBAInd( tpAniSirGlobal pMac,
             FL( "There were warnings while packing an DELBA Ind (0x%08x)." ));
       }
 
-      limLog( pMac, LOGW,
-          FL( "Sending a DELBA IND to " ));
-      limPrintMacAddr( pMac, pMlmDelBAReq->peerMacAddr, LOGW );
+      limLog( pMac, LOG1,
+            FL( "Sending a DELBA IND to: "MAC_ADDRESS_STR" with Tid = %d"
+            " initiator = %d reason = %d" ),
+            MAC_ADDR_ARRAY(pMlmDelBAReq->peerMacAddr),
+            frmDelBAInd.DelBAParameterSet.tid,
+            frmDelBAInd.DelBAParameterSet.initiator,
+            frmDelBAInd.Reason.code);
+
 
     if( ( SIR_BAND_5_GHZ == limGetRFBand(psessionEntry->currentOperChannel))
        || ( psessionEntry->pePersona == VOS_P2P_CLIENT_MODE ) ||
