@@ -19,6 +19,26 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 /*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+/*
  * Airgo Networks, Inc proprietary. All rights reserved.
  * This file schBeaconGen.cc contains beacon generation related
  * functions
@@ -98,7 +118,7 @@ tSirRetStatus schAppendAddnIE(tpAniSirGlobal pMac, tpPESession psessionEntry,
      if((status = wlan_cfgGetInt(pMac, WNI_CFG_PROBE_RSP_BCN_ADDNIE_FLAG,
                                  &present)) != eSIR_SUCCESS)
     {
-        schLog(pMac, LOGP, FL("Unable to get WNI_CFG_PROBE_RSP_BCN_ADDNIE_FLAG"));
+        limLog(pMac, LOGP, FL("Unable to get WNI_CFG_PROBE_RSP_BCN_ADDNIE_FLAG"));
         return status;
     }
 
@@ -107,7 +127,7 @@ tSirRetStatus schAppendAddnIE(tpAniSirGlobal pMac, tpPESession psessionEntry,
         if((status = wlan_cfgGetStrLen(pMac, WNI_CFG_PROBE_RSP_BCN_ADDNIE_DATA,
                                        &len)) != eSIR_SUCCESS)
         {
-            schLog(pMac, LOGP,
+            limLog(pMac, LOGP,
                 FL("Unable to get WNI_CFG_PROBE_RSP_BCN_ADDNIE_DATA length"));
             return status;
         }
@@ -137,7 +157,7 @@ tSirRetStatus schAppendAddnIE(tpAniSirGlobal pMac, tpPESession psessionEntry,
                         }
                         else
                         {
-                            schLog(pMac, LOGE,
+                            limLog(pMac, LOGE,
                                FL("Not able to insert NoA because of length constraint"));
                         }
                     }
@@ -328,7 +348,7 @@ tSirRetStatus schSetFixedBeaconFields(tpAniSirGlobal pMac,tpPESession psessionEn
 #ifdef WLAN_FEATURE_11AC
     if(psessionEntry->vhtCapability)
     {        
-        schLog( pMac, LOGW, FL("Populate VHT IEs in Beacon"));
+        limLog( pMac, LOGW, FL("Populate VHT IEs in Beacon"));
         PopulateDot11fVHTCaps( pMac, &pBcn2->VHTCaps );
         PopulateDot11fVHTOperation( pMac, &pBcn2->VHTOperation);
         // we do not support multi users yet
@@ -364,7 +384,7 @@ tSirRetStatus schSetFixedBeaconFields(tpAniSirGlobal pMac,tpPESession psessionEn
     else
     {
         if (wlan_cfgGetInt(pMac, (tANI_U16) WNI_CFG_WPS_ENABLE, &tmp) != eSIR_SUCCESS)
-            schLog(pMac, LOGP,"Failed to cfg get id %d", WNI_CFG_WPS_ENABLE );
+            limLog(pMac, LOGP,"Failed to cfg get id %d", WNI_CFG_WPS_ENABLE );
 
         wpsApEnable = tmp & WNI_CFG_WPS_ENABLE_AP;
 

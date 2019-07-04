@@ -1,5 +1,25 @@
 /*
- * Copyright (c) 2012-2016 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -515,7 +535,7 @@ static eHalStatus hdd_IndicateScanResult(hdd_scan_info_t *scanInfo, tCsrScanResu
    event.cmd = IWEVCUSTOM;
    p = custom;
    p += scnprintf(p, MAX_CUSTOM_LEN, " Age: %lu",
-                 vos_timer_get_system_time() - descriptor->nReceivedTime);
+                 vos_timer_get_system_ticks() - descriptor->nReceivedTime);
    event.u.data.length = p - custom;
    current_event = iwe_stream_add_point (scanInfo->info,current_event, end,
                                          &event, custom);
@@ -665,7 +685,7 @@ int iw_set_scan(struct net_device *dev, struct iw_request_info *info,
 
       if (wrqu->data.flags & IW_SCAN_THIS_ESSID)  {
 
-          if(scanReq->essid_len  &&
+          if(scanReq->essid_len &&
                (scanReq->essid_len <= SIR_MAC_MAX_SSID_LENGTH)) {
               scanRequest.SSIDs.numOfSSIDs = 1;
               scanRequest.SSIDs.SSIDList =( tCsrSSIDInfo *)vos_mem_malloc(sizeof(tCsrSSIDInfo));
@@ -944,7 +964,8 @@ int iw_set_cscan(struct net_device *dev, struct iw_request_info *info,
         int i, j, ssid_start;
         hdd_scan_pending_option_e scanPendingOption = WEXT_SCAN_PENDING_GIVEUP;
 
-        str_ptr = extra;
+        /* save the original buffer */
+        str_ptr = wrqu->data.pointer;
 
         i = WEXT_CSCAN_HEADER_SIZE;
 
@@ -1177,8 +1198,8 @@ exit_point:
 }
 
 /* Abort any MAC scan if in progress */
-void hdd_abort_mac_scan(hdd_context_t* pHddCtx, eCsrAbortReason reason)
+void hdd_abort_mac_scan(hdd_context_t* pHddCtx)
 {
-    sme_AbortMacScan(pHddCtx->hHal, reason);
+    sme_AbortMacScan(pHddCtx->hHal);
 }
 

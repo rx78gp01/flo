@@ -18,6 +18,26 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
 
 /**=========================================================================
   
@@ -59,20 +79,7 @@ wpt_status wpalPostCtrlMsg(void *pPalContext, wpt_msg *pMsg)
       return status;
    }
 
-   if ((WPAL_MC_MSG_SMD_NOTIF_OPEN_SIG == pMsg->type) ||
-       (WPAL_MC_MSG_SMD_NOTIF_DATA_SIG == pMsg->type))
-   {
-      /* SMD NOTIFY MSG has none 0 vos MSG type
-       * If VOS MC MSG flush procedure detect this,
-       * Do not free MSG body */
-      msg.type = pMsg->type;
-   }
-   else
-   {
-      /* Default MSG type
-       * VOS MC MSG flush procedure will free MSG body */
-      msg.type = 0;
-   }
+   msg.type = 0;  //This field is not used because VOSS doesn't check it.
    msg.reserved = 0;
    msg.bodyval = 0;
    msg.bodyptr = pMsg;

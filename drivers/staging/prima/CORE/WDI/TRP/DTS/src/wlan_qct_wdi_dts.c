@@ -18,6 +18,26 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
 
 /**=========================================================================
  *     
@@ -42,10 +62,6 @@
 #include "wlan_qct_wdi_dts.h"
 #include "wlan_qct_wdi_dp.h"
 #include "wlan_qct_wdi_sta.h"
-
-#ifdef DEBUG_ROAM_DELAY
-#include "vos_utils.h"
-#endif
 
 static WDTS_TransportDriverTrype gTransportDriver = {
   WLANDXE_Open, 
@@ -271,9 +287,6 @@ static WDI_DTS_TrafficStatsType gDsTrafficStats;
 
 #define DTS_RATE_TPUT(x) gRateInfo[x].tputBpus
 #define DTS_11BRATE_TPUT_MULTIPLIER(x) g11bRateInfo[x].tputBpus
-
-/* RX thread frame size threshold to delay frame drain */
-#define DTS_RX_DELAY_FRAMESIZE_THRESHOLD  500
 
 /* Tx/Rx stats function
  * This function should be invoked to fetch the current stats
@@ -520,18 +533,6 @@ wpt_status WDTS_RxPacket (void *pContext, wpt_packet *pFrame, WDTS_ChannelType c
   ucMPDUHLen    = (wpt_uint8)WDI_RX_BD_GET_MPDU_H_LEN(pBDHeader);
   ucTid         = (wpt_uint8)WDI_RX_BD_GET_TID(pBDHeader);
 
-  /* If RX thread drain small size of frame from HW too fast
-   * Sometimes HW cannot handle interrupt fast enough
-   * And system crash might happen
-   * To avoid system crash, input 1usec delay each frame draining
-   * within host side, if frame size is smaller that threshold.
-   * This is SW work around, to fix HW problem
-   * Throughput and SnS test done successfully */
-  if (usMPDULen < DTS_RX_DELAY_FRAMESIZE_THRESHOLD)
-  {
-    wpalBusyWait(1);
-  }
-
   /*------------------------------------------------------------------------
     Gather AMSDU information 
     ------------------------------------------------------------------------*/
@@ -571,16 +572,9 @@ wpt_status WDTS_RxPacket (void *pContext, wpt_packet *pFrame, WDTS_ChannelType c
         ucMPDUHOffset = usMPDUDOffset;
       }
 
-      if(VPKT_SIZE_BUFFER_ALIGNED < (usMPDULen+ucMPDUHOffset)){
-        WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_FATAL,
-                   "Invalid Frame size, might memory corrupted(%d+%d/%d)",
-                   usMPDULen, ucMPDUHOffset, VPKT_SIZE_BUFFER_ALIGNED);
-
-        /* Size of the packet tranferred by the DMA engine is
-         * greater than the the memory allocated for the skb
-         */
-        WPAL_BUG(0);
-
+      if(VPKT_SIZE_BUFFER < (usMPDULen+ucMPDUHOffset)){
+        DTI_TRACE( DTI_TRACE_LEVEL_FATAL,
+                   "Invalid Frame size, might memory corrupted");
         wpalPacketFree(pFrame);
         return eWLAN_PAL_STATUS_SUCCESS;
       }
@@ -653,7 +647,7 @@ wpt_status WDTS_RxPacket (void *pContext, wpt_packet *pFrame, WDTS_ChannelType c
       pRxMetadata->ampdu_reorderOpcode  = (wpt_uint8)WDI_RX_BD_GET_BA_OPCODE(pBDHeader);
       pRxMetadata->ampdu_reorderSlotIdx = (wpt_uint8)WDI_RX_BD_GET_BA_SI(pBDHeader);
       pRxMetadata->ampdu_reorderFwdIdx  = (wpt_uint8)WDI_RX_BD_GET_BA_FI(pBDHeader);
-      pRxMetadata->currentPktSeqNo       = (wpt_uint16)WDI_RX_BD_GET_BA_CSN(pBDHeader);
+      pRxMetadata->currentPktSeqNo       = (wpt_uint8)WDI_RX_BD_GET_BA_CSN(pBDHeader);
 
 
       /*------------------------------------------------------------------------
@@ -689,16 +683,6 @@ wpt_status WDTS_RxPacket (void *pContext, wpt_packet *pFrame, WDTS_ChannelType c
       WPAL_PACKET_SET_BD_POINTER(pFrame, pBDHeader);
       WPAL_PACKET_SET_BD_LENGTH(pFrame, sizeof(WDI_RxBdType));
 
-#ifdef DEBUG_ROAM_DELAY
-      //Hack we need to send the frame type, so we are using bufflen as frametype
-      vos_record_roam_event(e_DXE_RX_PKT_TIME, (void *)pFrame, pRxMetadata->type);
-      //Should we use the below check to avoid funciton calls
-      /*
-      if(gRoamDelayMetaInfo.dxe_monitor_tx)
-      {
-      }
-      */
-#endif
       // Invoke Rx complete callback
       pClientData->receiveFrameCB(pClientData->pCallbackContext, pFrame);  
   }
@@ -892,16 +876,6 @@ wpt_status WDTS_TxPacket(void *pContext, wpt_packet *pFrame)
 #endif
   // Send packet to  Transport Driver. 
   status =  gTransportDriver.xmit(pDTDriverContext, pFrame, channel);
-#ifdef DEBUG_ROAM_DELAY
-   //Hack we need to send the frame type, so we are using bufflen as frametype
-   vos_record_roam_event(e_DXE_FIRST_XMIT_TIME, (void *)pFrame, pTxMetadata->frmType);
-   //Should we use the below check to avoid funciton calls
-   /*
-   if(gRoamDelayMetaInfo.dxe_monitor_tx)
-   {
-   }
-   */
-#endif
   return status;
 }
 
@@ -984,9 +958,9 @@ wpt_status WDTS_SetPowerState(void *pContext, WDTS_PowerStateType  powerState,
  * Return Value: NONE
  *
  */
-void WDTS_ChannelDebug(wpt_boolean displaySnapshot, wpt_uint8 debugFlags)
+void WDTS_ChannelDebug(wpt_boolean displaySnapshot, wpt_boolean toggleStallDetect)
 {
-   gTransportDriver.channelDebug(displaySnapshot, debugFlags);
+   gTransportDriver.channelDebug(displaySnapshot, toggleStallDetect);
    return;
 }
 

@@ -19,6 +19,26 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 /*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+/*
  * Airgo Networks, Inc proprietary. All rights reserved.
  * This file parserApi.cc contains the code for parsing
  * 802.11 messages.
@@ -361,7 +381,13 @@ PopulateDot11fDSParams(tpAniSirGlobal     pMac,
                        tDot11fIEDSParams *pDot11f, tANI_U8 channel,
                        tpPESession psessionEntry)
 {
-    if ((IS_24G_CH(channel)) || pMac->rrm.rrmPEContext.rrmEnable)
+//    tSirRetStatus       nSirStatus;
+    tANI_U32            nPhyMode;
+
+    // Get PHY mode and based on that add DS Parameter Set IE
+    limGetPhyMode(pMac, &nPhyMode, psessionEntry);
+
+    if ( (WNI_CFG_PHY_MODE_11A != nPhyMode) || pMac->rrm.rrmPEContext.rrmEnable )
     {
         // .11b/g mode PHY => Include the DS Parameter Set IE:
         pDot11f->curr_channel = channel;
@@ -3058,17 +3084,6 @@ sirConvertBeaconFrame2Struct(tpAniSirGlobal       pMac,
         palCopyMemory( pMac->hHdd, (tANI_U8 *)&(pBeaconStruct->mdie[0]), (tANI_U8 *)&(pBeacon->MobilityDomain.MDID), sizeof(tANI_U16) );
         pBeaconStruct->mdie[2] = ((pBeacon->MobilityDomain.overDSCap << 0) | (pBeacon->MobilityDomain.resourceReqCap << 1));
 
-    }
-#endif
-
-#ifdef FEATURE_WLAN_CCX
-    if (pBeacon->CCXTxmitPower.present)
-    {
-        //CCX Tx Power
-        pBeaconStruct->ccxTxPwr.present = 1;
-        palCopyMemory( pMac->hHdd, &pBeaconStruct->ccxTxPwr,
-                                   &pBeacon->CCXTxmitPower,
-                                   sizeof(tDot11fIECCXTxmitPower));
     }
 #endif
 

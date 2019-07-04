@@ -18,6 +18,26 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
 
 /** ------------------------------------------------------------------------- *
     ------------------------------------------------------------------------- *
@@ -179,16 +199,6 @@ typedef enum
    eCSR_SCAN_FOUND_PEER,
 }eCsrScanStatus;
 
-/* Reason to abort the scan
- * The reason can used later to decide whether to update the scan results
- * to upper layer or not
- */
-typedef enum
-{
-    eCSR_SCAN_ABORT_DEFAULT,
-    eCSR_SCAN_ABORT_DUE_TO_BAND_CHANGE, //Scan aborted due to band change
-}eCsrAbortReason;
-
 #define CSR_SCAN_TIME_DEFAULT       0
 #define CSR_VALUE_IGNORED           0xFFFFFFFF
 #define CSR_RSN_PMKID_SIZE          16
@@ -219,6 +229,14 @@ typedef struct tagCsrChannelInfo
     tANI_U8 *ChannelList;   //it will be an array of channels
 }tCsrChannelInfo, *tpCsrChannelInfo;
 
+#if  defined (WLAN_FEATURE_VOWIFI_11R) || defined (FEATURE_WLAN_CCX) || defined(FEATURE_WLAN_LFR)
+typedef struct tagCsrCountryChannelInfo
+{
+    tCsrChannelInfo countryValidChannelList;
+    tANI_U8         revision; /* KR 25, 25 is the country revision index
+                                 to the list of valid channels */
+}tCsrCountryChannelInfo, *tpCsrCountryChannelInfo;
+#endif
 typedef struct tagCsrSSIDInfo
 {
    tSirMacSSid     SSID;
@@ -269,7 +287,6 @@ typedef struct tagCsrScanRequest
     eCsrRequestType requestType;    //11d scan or full scan
     tANI_BOOLEAN p2pSearch;
     tANI_BOOLEAN skipDfsChnlInP2pSearch;
-    tANI_BOOLEAN bcnRptReqScan;     //is Scan issued by Beacon Report Request
 }tCsrScanRequest;
 
 typedef struct tagCsrBGScanRequest
@@ -437,12 +454,6 @@ typedef enum
     eCSR_ROAM_FT_REASSOC_FAILED,
 #ifdef FEATURE_WLAN_LFR
     eCSR_ROAM_PMK_NOTIFY,
-#endif
-#ifdef FEATURE_WLAN_LFR_METRICS
-    eCSR_ROAM_PREAUTH_INIT_NOTIFY,
-    eCSR_ROAM_PREAUTH_STATUS_SUCCESS,
-    eCSR_ROAM_PREAUTH_STATUS_FAILURE,
-    eCSR_ROAM_HANDOVER_SUCCESS,
 #endif
 #ifdef FEATURE_WLAN_TDLS
     eCSR_ROAM_TDLS_STATUS_UPDATE,
@@ -1061,10 +1072,9 @@ typedef struct tagCsrConfigParam
     //To enable/disable scanning 2.4Ghz channels twice on a single scan request from HDD
     tANI_BOOLEAN fScanTwice;
 #ifdef WLAN_FEATURE_11AC
-    tANI_U32        nVhtChannelWidth;
-    tANI_U8         enableTxBF;
-    tANI_U8         txBFCsnValue;
-    tANI_BOOLEAN    enableVhtFor24GHz;
+    tANI_U32  nVhtChannelWidth;
+    tANI_U8   enableTxBF;
+    tANI_U8   txBFCsnValue;
 #endif
 
     /*
@@ -1086,10 +1096,6 @@ typedef struct tagCsrConfigParam
     tANI_U8 scanCfgAgingTime;
 
     tANI_U8   enableTxLdpc;
-
-    tANI_U8 isAmsduSupportInAMPDU;
-    tANI_U8 allowDFSChannelRoam;
-
 }tCsrConfigParam;
 
 //Tush

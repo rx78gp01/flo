@@ -18,6 +18,26 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
 
 #ifdef FEATURE_OEM_DATA_SUPPORT
 
@@ -212,14 +232,8 @@ int iw_set_oem_data_req(
 
         vos_mem_zero(&oemDataReqConfig, sizeof(tOemDataReqConfig));
 
-        if (copy_from_user((&oemDataReqConfig)->oemDataReq,
-                           pOemDataReq->oemDataReq, OEM_DATA_REQ_SIZE))
-        {
-            VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
-                      "%s: copy_from_user() failed!", __func__);
-            return -EFAULT;
-        }
-
+        vos_mem_copy((&oemDataReqConfig)->oemDataReq, pOemDataReq->oemDataReq, OEM_DATA_REQ_SIZE);
+    
         status = sme_OemDataReq(WLAN_HDD_GET_HAL_CTX(pAdapter), 
                                                 pAdapter->sessionId,
                                                 &oemDataReqConfig, 

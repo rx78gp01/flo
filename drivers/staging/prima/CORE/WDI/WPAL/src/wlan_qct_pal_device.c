@@ -18,6 +18,26 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+/*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
+ *
+ *
+ * Permission to use, copy, modify, and/or distribute this software for
+ * any purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
 
 /**=========================================================================
   
@@ -62,7 +82,6 @@
 #include "wlan_qct_pal_device.h"
 #include "wlan_hdd_main.h"
 #include "linux/wcnss_wlan.h"
-#include <linux/ratelimit.h>
 
 /*----------------------------------------------------------------------------
  * Preprocessor Definitions and Constants
@@ -102,12 +121,6 @@ typedef struct {
 static wcnss_env  gEnv;
 static wcnss_env *gpEnv = NULL;
 
-#define WPAL_READ_REGISTER_RATELIMIT_INTERVAL 20*HZ
-#define WPAL_READ_REGISTER_RATELIMIT_BURST    1
-
-static DEFINE_RATELIMIT_STATE(wpalReadRegister_rs, \
-        WPAL_READ_REGISTER_RATELIMIT_INTERVAL,     \
-        WPAL_READ_REGISTER_RATELIMIT_BURST);
 /*----------------------------------------------------------------------------
  * Static Function Declarations and Definitions
  * -------------------------------------------------------------------------*/
@@ -449,11 +462,7 @@ wpt_status wpalWriteRegister
    wpt_uint32   data
 )
 {
-   /* if SSR is in progress, and WCNSS is not out of reset (re-init
-    * not invoked), then do not access WCNSS registers */
-   if (NULL == gpEnv || wcnss_device_is_shutdown() ||
-        (vos_is_logp_in_progress(VOS_MODULE_ID_WDI, NULL) &&
-            !vos_is_reinit_in_progress(VOS_MODULE_ID_WDI, NULL))) {
+   if (NULL == gpEnv) {
       WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
                  "%s: invoked before subsystem initialized",
                  __func__);
@@ -497,22 +506,11 @@ wpt_status wpalReadRegister
    wpt_uint32  *data
 )
 {
-   /* if SSR is in progress, and WCNSS is not out of reset (re-init
-    * not invoked), then do not access WCNSS registers */
-   if (NULL == gpEnv || wcnss_device_is_shutdown() ||
-        (vos_is_logp_in_progress(VOS_MODULE_ID_WDI, NULL) &&
-            !vos_is_reinit_in_progress(VOS_MODULE_ID_WDI, NULL))) {
-       /* Ratelimit wpalReadRegister failure messages which
-        * can flood serial console during improper system
-        * initialization or wcnss_device in shutdown state.
-        * wpalRegisterInterrupt() call to wpalReadRegister is
-        * likely to cause flooding. */
-       if (__ratelimit(&wpalReadRegister_rs)) {
-           WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
-                   "%s: invoked before subsystem initialized",
-                   __func__);
-       }
-       return eWLAN_PAL_STATUS_E_INVAL;
+   if (NULL == gpEnv) {
+      WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
+                 "%s: invoked before subsystem initialized",
+                 __func__);
+      return eWLAN_PAL_STATUS_E_INVAL;
    }
 
    if ((address < gpEnv->wcnss_memory->start) ||
@@ -555,11 +553,7 @@ wpt_status wpalWriteDeviceMemory
   wpt_uint32 len
 )
 {
-   /* if SSR is in progress, and WCNSS is not out of reset (re-init
-    * not invoked), then do not access WCNSS registers */
-   if (NULL == gpEnv || wcnss_device_is_shutdown() ||
-        (vos_is_logp_in_progress(VOS_MODULE_ID_WDI, NULL) &&
-            !vos_is_reinit_in_progress(VOS_MODULE_ID_WDI, NULL))) {
+   if (NULL == gpEnv) {
       WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
                  "%s: invoked before subsystem initialized",
                  __func__);
@@ -599,11 +593,7 @@ wpt_status wpalReadDeviceMemory
   wpt_uint32 len
 )
 {
-   /* if SSR is in progress, and WCNSS is not out of reset (re-init
-    * not invoked), then do not access WCNSS registers */
-   if (NULL == gpEnv || wcnss_device_is_shutdown() ||
-        (vos_is_logp_in_progress(VOS_MODULE_ID_WDI, NULL) &&
-            !vos_is_reinit_in_progress(VOS_MODULE_ID_WDI, NULL))) {
+   if (NULL == gpEnv) {
       WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR,
                  "%s: invoked before subsystem initialized",
                  __func__);
